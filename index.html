@@ -57,6 +57,22 @@ textarea{resize:vertical;min-height:84px}
 .ans ul,.ans ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
 .btnlink{display:inline-block;background:var(--accent);color:var(--accent-ink);padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:600;align-self:flex-start}
 button.small{font-size:.85rem}
+.lex.big,.rtext{white-space:pre-line}
+.lawrow{gap:10px}
+.rtool .row .grow{flex:1}
+.reader{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 18px 18px}
+.rart{padding:12px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.rart:last-of-type{border-bottom:0}
+.rtext{font-family:var(--display);font-weight:400;font-size:var(--rfs,1rem);line-height:1.65;margin:0}
+.rtext b{font-family:var(--body);font-weight:600}
+.rart .ghost.small{align-self:flex-start;padding:2px 0;font-size:.8rem;color:var(--muted)}
+.rhead{margin:14px 0 2px;text-wrap:balance;font-family:var(--display)}
+.rhead.l1{font-size:1.25rem;text-transform:none;color:var(--accent);padding-top:10px;border-top:2px solid var(--accent)}
+.rhead.l2{font-size:1.08rem;color:var(--ink)}
+.rhead.l3{font-size:.98rem;color:var(--muted);font-family:var(--body);font-weight:600}
+.rlist > .rhead{margin:8px 0 0}
+button.wide{width:100%;margin:10px 0}
+.center{text-align:center;padding:10px 0}
 .timer{font-variant-numeric:tabular-nums;font-weight:600;padding:4px 10px;border:1px solid var(--line);border-radius:6px}
 .timer.low{color:var(--bad);border-color:var(--bad)}
 main{max-width:820px;margin:0 auto;padding:20px 16px 80px;display:flex;flex-direction:column;gap:18px}
@@ -369,7 +385,7 @@ function resultCard(){
   ]);
 }
 /* ================= NORMAS Y CONSULTAS ================= */
-var LAWIDX = [{"k": "CP", "n": "Código Penal", "c": "CP", "a": 674, "v": "d4089f53"}, {"k": "CPP", "n": "Código Procesal Penal", "c": "CPP", "a": 563, "v": "7db0dd3c"}, {"k": "CPR", "n": "Constitución Política (Cap. VII y demás)", "c": "CPR", "a": 170, "v": "c396499e"}, {"k": "LOC", "n": "Ley 19.640, Orgánica del Ministerio Público", "c": "Ley 19.640", "a": 129, "v": "3efe3888"}, {"k": "COT", "n": "Código Orgánico de Tribunales", "c": "COT", "a": 679, "v": "d4889551"}, {"k": "L18216", "n": "Ley 18.216, penas sustitutivas", "c": "Ley 18.216", "a": 63, "v": "80794ea0"}, {"k": "L20000", "n": "Ley 20.000, drogas", "c": "Ley 20.000", "a": 83, "v": "600a6c1d"}, {"k": "L20084", "n": "Ley 20.084, responsabilidad penal adolescente", "c": "Ley 20.084", "a": 113, "v": "71977851"}, {"k": "L20066", "n": "Ley 20.066, violencia intrafamiliar", "c": "Ley 20.066", "a": 35, "v": "c6b18867"}, {"k": "ARM", "n": "Ley 17.798, control de armas (DTO 400)", "c": "Ley 17.798", "a": 53, "v": "00e234d3"}, {"k": "TRA", "n": "Ley de Tránsito (DFL 1, 2009)", "c": "Ley de Tránsito", "a": 259, "v": "fce6c711"}, {"k": "L21732", "n": "Ley 21.732, conductas terroristas", "c": "Ley 21.732", "a": 27, "v": "37dd580f"}, {"k": "L21849", "n": "Ley 21.849, uso de la fuerza", "c": "Ley 21.849", "a": 19, "v": "52bf2a28"}, {"k": "L20393", "n": "Ley 20.393, personas jurídicas", "c": "Ley 20.393", "a": 37, "v": "45a30dc5"}, {"k": "L19913", "n": "Ley 19.913, lavado de activos", "c": "Ley 19.913", "a": 50, "v": "3ed38ad7"}, {"k": "L21459", "n": "Ley 21.459, delitos informáticos", "c": "Ley 21.459", "a": 21, "v": "dc818113"}, {"k": "EIV", "n": "Ley 21.057, entrevistas videograbadas", "c": "Ley 21.057", "a": 33, "v": "e671917b"}, {"k": "ADN", "n": "Ley 19.970, registros de ADN", "c": "Ley 19.970", "a": 27, "v": "3cc053ba"}, {"k": "L17336", "n": "Ley 17.336, propiedad intelectual", "c": "Ley 17.336", "a": 161, "v": "b524c9e5"}, {"k": "CJM", "n": "Código de Justicia Militar", "c": "CJM", "a": 458, "v": "e929e2dd"}, {"k": "L20214", "n": "Ley 20.214, delitos contra Gendarmería", "c": "DL 2.859 (Ley 20.214)", "a": 4, "v": "e2e6f3cb"}, {"k": "DL2460", "n": "DL 2.460, Orgánica de la PDI", "c": "DL 2.460", "a": 62, "v": "861fc7e3"}, {"k": "L20477", "n": "Ley 20.477, competencia de tribunales militares", "c": "Ley 20.477", "a": 18, "v": "abc575fe"}];
+var LAWIDX = [{"k": "CP", "n": "Código Penal", "c": "CP", "a": 674, "v": "bea610d2"}, {"k": "CPP", "n": "Código Procesal Penal", "c": "CPP", "a": 563, "v": "3ca11ea5"}, {"k": "CPR", "n": "Constitución Política (Cap. VII y demás)", "c": "CPR", "a": 170, "v": "d383fd48"}, {"k": "LOC", "n": "Ley 19.640, Orgánica del Ministerio Público", "c": "Ley 19.640", "a": 129, "v": "723a248d"}, {"k": "COT", "n": "Código Orgánico de Tribunales", "c": "COT", "a": 679, "v": "00fcc1e4"}, {"k": "L18216", "n": "Ley 18.216, penas sustitutivas", "c": "Ley 18.216", "a": 63, "v": "f2f6f6db"}, {"k": "L20000", "n": "Ley 20.000, drogas", "c": "Ley 20.000", "a": 83, "v": "5ddfd323"}, {"k": "L20084", "n": "Ley 20.084, responsabilidad penal adolescente", "c": "Ley 20.084", "a": 113, "v": "961dd3e3"}, {"k": "L20066", "n": "Ley 20.066, violencia intrafamiliar", "c": "Ley 20.066", "a": 35, "v": "c0abc351"}, {"k": "ARM", "n": "Ley 17.798, control de armas (DTO 400)", "c": "Ley 17.798", "a": 53, "v": "ab6ed673"}, {"k": "TRA", "n": "Ley de Tránsito (DFL 1, 2009)", "c": "Ley de Tránsito", "a": 259, "v": "365fbfb4"}, {"k": "L21732", "n": "Ley 21.732, conductas terroristas", "c": "Ley 21.732", "a": 27, "v": "f5545906"}, {"k": "L21849", "n": "Ley 21.849, uso de la fuerza", "c": "Ley 21.849", "a": 19, "v": "204057ac"}, {"k": "L20393", "n": "Ley 20.393, personas jurídicas", "c": "Ley 20.393", "a": 37, "v": "bbf5920b"}, {"k": "L19913", "n": "Ley 19.913, lavado de activos", "c": "Ley 19.913", "a": 50, "v": "b9abaf0f"}, {"k": "L21459", "n": "Ley 21.459, delitos informáticos", "c": "Ley 21.459", "a": 21, "v": "95336bec"}, {"k": "EIV", "n": "Ley 21.057, entrevistas videograbadas", "c": "Ley 21.057", "a": 33, "v": "4c5c7b3d"}, {"k": "ADN", "n": "Ley 19.970, registros de ADN", "c": "Ley 19.970", "a": 27, "v": "b611bec4"}, {"k": "L17336", "n": "Ley 17.336, propiedad intelectual", "c": "Ley 17.336", "a": 161, "v": "7f7a2d72"}, {"k": "CJM", "n": "Código de Justicia Militar", "c": "CJM", "a": 458, "v": "fb55c40b"}, {"k": "L20214", "n": "Ley 20.214, delitos contra Gendarmería", "c": "DL 2.859 (Ley 20.214)", "a": 4, "v": "50fa796a"}, {"k": "DL2460", "n": "DL 2.460, Orgánica de la PDI", "c": "DL 2.460", "a": 62, "v": "76f5efb6"}, {"k": "L20477", "n": "Ley 20.477, competencia de tribunales militares", "c": "Ley 20.477", "a": 18, "v": "ae4de6ea"}];
 var CLAUDE_URL = "https://claude.ai/artifact/AnAhRFwvLRZ7xkqiiTYWAQ";
 var LAWS = {}, LAWP = {};
 function nz(s){ return String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase(); }
@@ -378,7 +394,7 @@ function loadLaw(k){
   if(LAWS[k]) return Promise.resolve(LAWS[k]);
   if(LAWP[k]) return LAWP[k];
   LAWP[k] = fetch("leyes/"+k+".json").then(function(r){ if(!r.ok) throw new Error("No se pudo cargar "+k); return r.json(); })
-    .then(function(a){ LAWS[k] = a.map(function(x,i){ return {n:x[0], t:x[1], s:nz(x[1]), i:i, k:k}; }); return LAWS[k]; })
+    .then(function(a){ LAWS[k] = a.map(function(x,i){ return {n:x[0], t:x[1], s:nz(x[1]), i:i, k:k, hd:x[2]||null}; }); return LAWS[k]; })
     .catch(function(e){ LAWP[k] = null; throw e; });
   return LAWP[k];
 }
@@ -427,7 +443,7 @@ function literal(q, only, k){
 function snippet(a, q){
   var T = nz(q).split(/\s+/).filter(function(w){ return w.length>1; }), p = -1;
   for(var i=0;i<T.length && p<0;i++) p = a.s.indexOf(T[i]);
-  var st = Math.max(0, p-90), txt = a.t.slice(st, st+260);
+  var st = Math.max(0, p-90), txt = a.t.slice(st, st+260).replace(/\n/g," ");
   return (st>0?"… ":"") + txt + (st+260<a.t.length?" …":"");
 }
 function hl(el, text, q){
@@ -449,7 +465,7 @@ function setTab(v){
 }
 
 /* ---------- Normas */
-var NS = {law:"", q:"", art:null, list:null};
+var NS = {law:"", q:"", art:null, list:null, read:null};
 function normas(){
   stopTimer(); if(S && S.mode!=="exam") S = null;
   app.innerHTML = "";
@@ -458,13 +474,86 @@ function normas(){
   sel.value = NS.law;
   var inp = h("input",{type:"search",id:"nQ",placeholder:"Ej.: 130 · 132 bis · flagrancia · prisión preventiva",value:NS.q,autocomplete:"off"});
   var out = h("div",{class:"nres"});
-  function run(){ NS.law = sel.value; NS.q = inp.value.trim(); NS.art = null; doSearch(out); }
+  function run(){ NS.law = sel.value; NS.q = inp.value.trim(); NS.art = null; NS.read = null; if(!NS.q && !NS.law){ library(out); return; } doSearch(out); }
   var form = h("form",{class:"card",onsubmit:function(e){ e.preventDefault(); run(); }},[
     h("label",{for:"nLaw"},["Cuerpo legal", sel]), h("label",{for:"nQ"},["Artículo o palabras", inp]),
     h("div",{class:"row"},[h("button",{class:"primary",type:"submit"},["Buscar"]), h("span",{class:"small muted",text:"Con un cuerpo legal elegido y sin texto, verás su índice de artículos."})])
   ]);
+  if(NS.read){ app.innerHTML = ""; app.appendChild(out); readLaw(out, NS.read.k, NS.read.i); return; }
   app.appendChild(form); app.appendChild(out);
-  if(NS.art) showArt(out, NS.art.k, NS.art.i); else if(NS.q || NS.law) doSearch(out);
+  if(NS.read) readLaw(out, NS.read.k, NS.read.i);
+  else if(NS.art) showArt(out, NS.art.k, NS.art.i); else if(NS.q || NS.law) doSearch(out); else library(out);
+}
+/* ---------- Biblioteca y lectura continua */
+var RKEY = KEY + "-lectura";
+function rget(){ try{ return JSON.parse(localStorage.getItem(RKEY)||"{}"); }catch(e){ return {}; } }
+function rset(o){ try{ localStorage.setItem(RKEY, JSON.stringify(o)); }catch(e){} }
+function library(out){
+  out.innerHTML = "";
+  var pos = rget().pos || {};
+  out.appendChild(h("h2",{text:"Leer las normas"}));
+  out.appendChild(h("p",{class:"small muted",text:"Abre cualquier cuerpo legal y léelo de corrido, ordenado por libros, títulos y párrafos. La app recuerda dónde quedaste en cada uno."}));
+  out.appendChild(h("div",{class:"rlist"}, LAWIDX.map(function(m){
+    var p = pos[m.k];
+    return h("div",{class:"card lawrow"},[
+      h("div",null,[h("b",{text:m.n}), h("div",{class:"small muted",text:m.a+" artículos"+(p ? " · ibas en el art. "+p.n : "")})]),
+      h("div",{class:"row"},[
+        h("button",{class:"primary",type:"button",onclick:function(){ openRead(m.k, p ? p.i : 0); }},[p ? "Continuar" : "Leer"]),
+        p ? h("button",{type:"button",onclick:function(){ openRead(m.k, 0); }},["Desde el inicio"]) : null,
+        h("button",{class:"ghost",type:"button",onclick:function(){ NS.law = m.k; NS.q = ""; NS.art = null; NS.read = null; normas(); }},["Índice"])
+      ])
+    ]);
+  })));
+}
+function openRead(k, i){ NS.read = {k:k, i:i||0}; NS.law = k; NS.q = ""; NS.art = null; normas(); window.scrollTo(0,0); }
+function headEl(hd){ return hd.map(function(x){ return h(x[0]===1 ? "h2" : x[0]===2 ? "h3" : "h4",{class:"rhead l"+x[0],text:x[1]}); }); }
+function artBody(a, q){
+  var p = h("p",{class:"rtext"}), m = a.t.match(/^((?:Art[ií]culo|ART[IÍ]CULO|ART\.|Art\.)\s*[^\s]+(?:\s(?:bis|ter|qu[aá]ter|quinquies|sexies|septies|[A-Z]))?\s*[°º]?\s*[\.\-–:]+)/);
+  if(m){ p.appendChild(h("b",{text:m[1]})); var rest = h("span"); q ? hl(rest, a.t.slice(m[1].length), q) : (rest.textContent = a.t.slice(m[1].length)); p.appendChild(rest); }
+  else { q ? hl(p, a.t, q) : (p.textContent = a.t); }
+  return p;
+}
+function readLaw(out, k, start){
+  var L = LAWS[k];
+  if(!L){ loading(out); loadLaw(k).then(function(){ readLaw(out, k, start); }).catch(function(){ failMsg(out); }); return; }
+  var meta = lawMeta(k), CH = 40, st = rget(), fs = st.fs || 1;
+  start = Math.max(0, Math.min(start||0, L.length-1));
+  out.innerHTML = "";
+  var secs = []; L.forEach(function(a){ (a.hd||[]).forEach(function(x){ secs.push({i:a.i, l:x[0], t:x[1]}); }); });
+  var jump = h("select",{id:"rSec","aria-label":"Ir a una sección"},[h("option",{value:"",text: secs.length ? "Ir a una sección…" : "Esta norma no tiene secciones"})].concat(secs.map(function(x){
+    return h("option",{value:String(x.i),text:(x.l===3?"  · ":x.l===2?"– ":"")+x.t.slice(0,90)}); })));
+  jump.addEventListener("change", function(){ if(jump.value!==""){ readLaw(out, k, parseInt(jump.value,10)); window.scrollTo(0,0); } });
+  var artIn = h("input",{type:"search",id:"rArt",placeholder:"N° de artículo",autocomplete:"off",inputmode:"text"});
+  var reader = h("div",{class:"reader"}); reader.style.setProperty("--rfs", fs+"rem");
+  function setFs(d){ fs = Math.max(0.85, Math.min(1.5, Math.round((fs+d)*100)/100)); reader.style.setProperty("--rfs", fs+"rem"); var o = rget(); o.fs = fs; rset(o); }
+  out.appendChild(h("div",{class:"card rtool"},[
+    h("div",{class:"lexc",text:"Lectura completa"}), h("h2",{text:meta.n}),
+    h("label",{for:"rSec"},["Sección", jump]),
+    h("form",{class:"row",onsubmit:function(e){ e.preventDefault(); var a = findArt(k, artIn.value.replace(/^art(?:[ií]culo|\.)?\s*/i,"")); if(a){ readLaw(out, k, a.i); window.scrollTo(0,0); } else { artIn.value = ""; artIn.placeholder = "No existe ese artículo"; } }},[
+      h("label",{for:"rArt",class:"grow"},["Ir al artículo", artIn]), h("button",{type:"submit"},["Ir"])]),
+    h("div",{class:"row"},[h("span",{class:"small muted",text:"Tamaño de letra"}), h("button",{type:"button","aria-label":"Letra más pequeña",onclick:function(){ setFs(-0.08); }},["A−"]), h("button",{type:"button","aria-label":"Letra más grande",onclick:function(){ setFs(0.08); }},["A+"]),
+      h("button",{class:"ghost",type:"button",onclick:function(){ NS.read = null; NS.law = ""; normas(); }},["Volver a las normas"])])
+  ]));
+  out.appendChild(reader);
+  var lo = start, hi = start;
+  var prevBtn = h("button",{type:"button",class:"wide",onclick:function(){ var from = Math.max(0, lo-CH), y0 = document.documentElement.scrollHeight;
+    var frag = document.createDocumentFragment(); for(var i=from;i<lo;i++) frag.appendChild(artEl(L[i])); reader.insertBefore(frag, prevBtn.nextSibling); lo = from;
+    window.scrollBy(0, document.documentElement.scrollHeight - y0); if(lo===0) prevBtn.remove(); }},["Ver artículos anteriores"]);
+  var moreBtn = h("button",{type:"button",class:"wide",onclick:function(){ more(); }},["Seguir leyendo"]);
+  function artEl(a){ return h("section",{class:"rart","data-i":String(a.i)}, headEl(a.hd||[]).concat([artBody(a), h("button",{class:"ghost small",type:"button",onclick:function(){ CS.draft = "Explícame el artículo "+a.n+" de "+meta.c+": qué regula, requisitos, plazos o penas y cómo se relaciona con otras normas."; setTab("consultar"); }},["Preguntar a Claude"])])); }
+  function more(){ var to = Math.min(L.length, hi+CH), frag = document.createDocumentFragment(); for(var i=hi;i<to;i++) frag.appendChild(artEl(L[i])); reader.insertBefore(frag, moreBtn); hi = to;
+    if(hi>=L.length){ moreBtn.replaceWith(h("p",{class:"small muted center",text:"Fin de "+meta.n+"."})); if(io) io.disconnect(); } }
+  if(lo>0) reader.appendChild(prevBtn);
+  reader.appendChild(moreBtn); more();
+  var io = null;
+  if("IntersectionObserver" in window){ io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting && hi<L.length) more(); }); }, {rootMargin:"600px"}); io.observe(moreBtn); }
+  var tmr = null;
+  function track(){ if(!NS.read || NS.read.k!==k || !document.body.contains(reader)){ window.removeEventListener("scroll", onScroll); return; }
+    var top = (document.querySelector("header.bar")||{offsetHeight:0}).offsetHeight + 8, els = reader.querySelectorAll(".rart");
+    for(var j=0;j<els.length;j++){ var r = els[j].getBoundingClientRect(); if(r.bottom > top){ var i = parseInt(els[j].dataset.i,10); NS.read.i = i; var o = rget(); o.pos = o.pos || {}; o.pos[k] = {i:i, n:L[i].n}; rset(o); break; } } }
+  function onScroll(){ if(tmr) return; tmr = setTimeout(function(){ tmr = null; track(); }, 400); }
+  window.addEventListener("scroll", onScroll, {passive:true});
+  var o0 = rget(); o0.pos = o0.pos || {}; o0.pos[k] = {i:start, n:L[start].n}; rset(o0);
 }
 function loading(out, msg){ out.innerHTML = ""; out.appendChild(h("p",{class:"muted",text:msg||"Cargando textos…"})); }
 function failMsg(out){ out.innerHTML = ""; out.appendChild(h("div",{class:"card"},[h("p",{text:"No se pudieron cargar los textos legales. Si estás sin internet, abre esta sección una vez con conexión para que queden guardados."})])); }
@@ -494,29 +583,34 @@ function doSearch(out){
 function listArts(out, k){
   var L = LAWS[k], meta = lawMeta(k);
   out.appendChild(h("p",{class:"small muted",text: meta.n+" · "+L.length+" artículos"}));
-  out.appendChild(h("div",{class:"rlist"}, L.map(function(a){
-    return h("button",{class:"ritem",type:"button",onclick:function(){ NS.art = {k:k, i:a.i}; showArt(out, k, a.i); window.scrollTo(0,0); }},[
-      h("span",{class:"rcite",text:"Art. "+a.n}), h("span",{class:"rsnip",text:a.t.replace(/^\S+\s+\S+\s*[\.\-]*\s*/,"").slice(0,140)+(a.t.length>140?"…":"")})]);
-  })));
+  out.appendChild(h("div",{class:"row"},[h("button",{class:"primary",type:"button",onclick:function(){ openRead(k, 0); }},["Leer completo"])]));
+  var items = [];
+  L.forEach(function(a){
+    items = items.concat(headEl(a.hd||[]));
+    items.push(h("button",{class:"ritem",type:"button",onclick:function(){ NS.art = {k:k, i:a.i}; showArt(out, k, a.i); window.scrollTo(0,0); }},[
+      h("span",{class:"rcite",text:"Art. "+a.n}), h("span",{class:"rsnip",text:a.t.replace(/\n/g," ").replace(/^\S+\s+\S+\s*[\.\-]*\s*/,"").slice(0,140)+(a.t.length>140?"…":"")})]));
+  });
+  out.appendChild(h("div",{class:"rlist"}, items));
 }
 function showArt(out, k, i){
   var L = LAWS[k];
   if(!L){ loading(out); loadLaw(k).then(function(){ showArt(out, k, i); }).catch(function(){ failMsg(out); }); return; }
   var a = L[i], meta = lawMeta(k); NS.art = {k:k, i:i};
   out.innerHTML = "";
-  var body = h("div",{class:"lex big"}); hl(body, a.t, NS.q && !/^\s*(art|\d)/i.test(NS.q) ? NS.q : "");
+  var body = h("div",{class:"lex big"}); body.appendChild(artBody(a, NS.q && !/^\s*(art|\d)/i.test(NS.q) ? NS.q : ""));
   out.appendChild(h("div",{class:"card"},[
-    h("div",{class:"lexc",text:meta.n}), h("h2",{text:"Artículo "+a.n}), body,
+    h("div",{class:"lexc",text:meta.n}), h("h2",{text:"Artículo "+a.n}), (function(){ var sec = []; for(var j=i;j>=0 && sec.length<3;j--){ (L[j].hd||[]).slice().reverse().forEach(function(x){ if(!sec.some(function(y){ return y[0]<=x[0]; })) sec.unshift(x); }); } return sec.length ? h("p",{class:"small muted",text:sec.map(function(x){ return x[1]; }).join(" › ")}) : null; })(), body,
     h("div",{class:"foot"},[
       h("button",{type:"button",disabled:i===0?"disabled":null,onclick:function(){ showArt(out,k,i-1); window.scrollTo(0,0); }},["‹ Art. anterior"]),
       h("button",{class:"ghost",type:"button",onclick:function(){ NS.art = null; doSearch(out); }},[NS.q ? "Volver a resultados" : "Índice de la norma"]),
       h("button",{type:"button",disabled:i>=L.length-1?"disabled":null,onclick:function(){ showArt(out,k,i+1); window.scrollTo(0,0); }},["Art. siguiente ›"])
     ]),
+    h("button",{type:"button",onclick:function(){ openRead(k, i); window.scrollTo(0,0); }},["Leer la norma desde aquí"]),
     h("button",{class:"ghost",type:"button",onclick:function(){ CS.draft = "Explícame el artículo "+a.n+" de "+meta.c+": qué regula, requisitos, plazos o penas y cómo se relaciona con otras normas."; setTab("consultar"); }},["Preguntar a Claude sobre este artículo"])
   ]));
 }
 function goArt(k, a){
-  VIEW = "normas"; NS.law = k; NS.q = "";
+  VIEW = "normas"; NS.law = k; NS.q = ""; NS.read = null;
   loadLaw(k).then(function(){ var x = findArt(k, a); NS.art = x ? {k:k, i:x.i} : null; setTab("normas"); }).catch(function(){ setTab("normas"); });
 }
 
