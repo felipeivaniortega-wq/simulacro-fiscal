@@ -73,6 +73,18 @@ button.small{font-size:.85rem}
 .rlist > .rhead{margin:8px 0 0}
 button.wide{width:100%;margin:10px 0}
 .center{text-align:center;padding:10px 0}
+.ntools{display:flex;flex-direction:column;gap:6px}
+.chip.mk{font-size:.8rem;padding:4px 10px}
+.mk-imp{--mk:var(--accent);--mkbg:var(--soft)} .mk-rep{--mk:var(--warn);--mkbg:var(--warn-bg)} .mk-dud{--mk:var(--bad);--mkbg:var(--bad-bg)}
+.chip.mk.on{background:var(--mkbg);border-color:var(--mk);color:var(--mk);font-weight:600}
+.tag.mk-imp,.tag.mk-rep,.tag.mk-dud{background:var(--mkbg);color:var(--mk)}
+.ntags{display:flex;gap:6px;flex-wrap:wrap}
+.mkl{border-left:4px solid var(--mk);padding-left:12px}
+.rart.mkl{margin-left:-14px;padding-left:10px}
+.note{background:var(--warn-bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+.note p{margin:0;white-space:pre-line}
+.nquote{font-style:italic;white-space:pre-line;font-size:.9rem}
+.mineBtn{text-align:left;flex-direction:column;align-items:flex-start;width:100%;gap:2px;border-left:4px solid var(--accent)}
 .timer{font-variant-numeric:tabular-nums;font-weight:600;padding:4px 10px;border:1px solid var(--line);border-radius:6px}
 .timer.low{color:var(--bad);border-color:var(--bad)}
 main{max-width:820px;margin:0 auto;padding:20px 16px 80px;display:flex;flex-direction:column;gap:18px}
@@ -474,7 +486,7 @@ function normas(){
   sel.value = NS.law;
   var inp = h("input",{type:"search",id:"nQ",placeholder:"Ej.: 130 · 132 bis · flagrancia · prisión preventiva",value:NS.q,autocomplete:"off"});
   var out = h("div",{class:"nres"});
-  function run(){ NS.law = sel.value; NS.q = inp.value.trim(); NS.art = null; NS.read = null; if(!NS.q && !NS.law){ library(out); return; } doSearch(out); }
+  function run(){ NS.law = sel.value; NS.q = inp.value.trim(); NS.art = null; NS.read = null; NS.from = null; if(!NS.q && !NS.law){ library(out); return; } doSearch(out); }
   var form = h("form",{class:"card",onsubmit:function(e){ e.preventDefault(); run(); }},[
     h("label",{for:"nLaw"},["Cuerpo legal", sel]), h("label",{for:"nQ"},["Artículo o palabras", inp]),
     h("div",{class:"row"},[h("button",{class:"primary",type:"submit"},["Buscar"]), h("span",{class:"small muted",text:"Con un cuerpo legal elegido y sin texto, verás su índice de artículos."})])
@@ -488,8 +500,102 @@ function normas(){
 var RKEY = KEY + "-lectura";
 function rget(){ try{ return JSON.parse(localStorage.getItem(RKEY)||"{}"); }catch(e){ return {}; } }
 function rset(o){ try{ localStorage.setItem(RKEY, JSON.stringify(o)); }catch(e){} }
+
+/* ---------- Marcas y notas personales (se guardan en este dispositivo) */
+var NKEY = KEY + "-notas", MARKS = {imp:"Importante", rep:"Repasar", dud:"Duda"};
+function nget(){ try{ return JSON.parse(localStorage.getItem(NKEY)||"{}"); }catch(e){ return {}; } }
+function nset(o){ try{ localStorage.setItem(NKEY, JSON.stringify(o)); return true; }catch(e){ return false; } }
+function nid(a){ return a.k + "|" + a.n; }
+function noteOf(a){ return nget()[nid(a)] || null; }
+function saveNote(a, patch){
+  var o = nget(), id = nid(a), x = Object.assign({}, o[id]||{}, patch, {d:Date.now()});
+  if(!x.m && !(x.n && x.n.trim())) delete o[id]; else o[id] = x;
+  return nset(o);
+}
+function noteTags(a){
+  var x = noteOf(a); if(!x) return null;
+  return h("span",{class:"ntags"},[x.m ? h("span",{class:"tag mk-"+x.m,text:MARKS[x.m]}) : null, x.n ? h("span",{class:"tag",text:"Con nota"}) : null]);
+}
+function noteTools(a, onChange){
+  var x = noteOf(a) || {}, wrap = h("div",{class:"ntools"});
+  wrap.appendChild(h("div",{class:"chips"},[h("span",{class:"small muted",text:"Marcar:"})].concat(Object.keys(MARKS).map(function(m){
+    return h("button",{type:"button",class:"chip mk mk-"+m+(x.m===m?" on":""),"aria-pressed":x.m===m?"true":"false",
+      onclick:function(){ saveNote(a,{m: x.m===m ? null : m}); onChange(); }},[MARKS[m]]); }))));
+  var area = h("div");
+  function view(){
+    area.innerHTML = "";
+    if(x.n) area.appendChild(h("div",{class:"note"},[h("div",{class:"lexc",text:"Mi nota"}), h("p",{text:x.n})]));
+    area.appendChild(h("button",{class:"ghost small",type:"button",onclick:edit},[x.n ? "Editar nota" : "Agregar nota"]));
+  }
+  function edit(){
+    area.innerHTML = "";
+    var id = "nt-" + nid(a).replace(/[^A-Za-z0-9]/g,"-"), ta = h("textarea",{id:id,rows:"3",placeholder:"Escribe tu comentario: ideas clave, relación con otros artículos, dudas…"});
+    ta.value = x.n || "";
+    var msg = h("p",{class:"small muted"});
+    area.appendChild(h("div",{class:"note edit"},[h("label",{for:id},["Mi nota", ta]), msg, h("div",{class:"row"},[
+      h("button",{class:"primary",type:"button",onclick:function(){ if(saveNote(a,{n: ta.value.trim()})) onChange(); else msg.textContent = "No se pudo guardar: el almacenamiento de este navegador no está disponible."; }},["Guardar nota"]),
+      x.n ? h("button",{type:"button",onclick:function(){ saveNote(a,{n:""}); onChange(); }},["Borrar nota"]) : null,
+      h("button",{class:"ghost",type:"button",onclick:view},["Cancelar"])])]));
+    ta.focus();
+  }
+  view(); wrap.appendChild(area);
+  return wrap;
+}
+function myNotes(out){
+  NS.from = "mine"; NS.art = null; NS.read = null;
+  var o = nget(), ids = Object.keys(o), ks = [];
+  ids.forEach(function(id){ var k = id.split("|")[0]; if(lawMeta(k) && ks.indexOf(k)<0) ks.push(k); });
+  loading(out, "Cargando tus marcas…");
+  Promise.all(ks.map(loadLaw)).then(function(){
+    out.innerHTML = "";
+    var items = [];
+    ids.forEach(function(id){ var p = id.split("|"), k = p[0], n = p.slice(1).join("|"); if(!LAWS[k]) return;
+      var a = LAWS[k].filter(function(x){ return x.n===n; })[0]; if(a) items.push({a:a, x:o[id]}); });
+    var order = LAWIDX.map(function(m){ return m.k; });
+    items.sort(function(p,q){ return order.indexOf(p.a.k)-order.indexOf(q.a.k) || p.a.i-q.a.i; });
+    var fType = h("select",{id:"mType"},[h("option",{value:"",text:"Todas"}), h("option",{value:"imp",text:"Importante"}), h("option",{value:"rep",text:"Repasar"}), h("option",{value:"dud",text:"Duda"}), h("option",{value:"nota",text:"Con nota"})]);
+    var fLaw = h("select",{id:"mLaw"},[h("option",{value:"",text:"Todas las normas"})].concat(ks.map(function(k){ return h("option",{value:k,text:lawMeta(k).n}); })));
+    var fQ = h("input",{type:"search",id:"mQ",placeholder:"Buscar en tus notas o en el artículo",autocomplete:"off"});
+    var list = h("div",{class:"rlist"}), copyMsg = h("p",{class:"small muted"});
+    function draw(){
+      list.innerHTML = ""; var q = nz(fQ.value.trim());
+      var shown = items.filter(function(it){
+        if(fType.value==="nota" ? !it.x.n : (fType.value && it.x.m!==fType.value)) return false;
+        if(fLaw.value && it.a.k!==fLaw.value) return false;
+        return !q || nz(it.x.n||"").indexOf(q)>=0 || it.a.s.indexOf(q)>=0 || nz("art "+it.a.n).indexOf(q)>=0;
+      });
+      if(!shown.length){ list.appendChild(h("p",{class:"muted",text: items.length ? "Ninguna marca coincide con el filtro." : "Aún no tienes marcas ni notas. Mientras lees o buscas, usa los botones Importante, Repasar o Duda, o agrega una nota bajo cualquier artículo."})); return; }
+      shown.forEach(function(it){
+        list.appendChild(h("button",{class:"ritem"+(it.x.m?" mkl mk-"+it.x.m:""),type:"button",onclick:function(){ NS.art = {k:it.a.k, i:it.a.i}; showArt(out, it.a.k, it.a.i); window.scrollTo(0,0); }},[
+          h("span",{class:"rcite",text:"Art. "+it.a.n+" · "+lawMeta(it.a.k).c}), noteTags(it.a),
+          it.x.n ? h("span",{class:"nquote",text:it.x.n}) : null,
+          h("span",{class:"rsnip",text:it.a.t.replace(/\n/g," ").slice(0,150)+(it.a.t.length>150?"…":"")})]));
+      });
+    }
+    [fType, fLaw].forEach(function(e){ e.addEventListener("change", draw); }); fQ.addEventListener("input", draw);
+    function exportText(){
+      return items.map(function(it){ return "Art. "+it.a.n+" "+lawMeta(it.a.k).c+(it.x.m?" ["+MARKS[it.x.m]+"]":"")+(it.x.n?"\nNota: "+it.x.n:""); }).join("\n\n");
+    }
+    out.appendChild(h("div",{class:"card"},[
+      h("h2",{text:"Mis marcas y notas"}),
+      h("p",{class:"small muted",text: items.length+" artículo"+(items.length===1?"":"s")+" marcado"+(items.length===1?"":"s")+" o con nota. Se guardan sólo en este dispositivo y navegador."}),
+      h("label",{for:"mType"},["Tipo", fType]), h("label",{for:"mLaw"},["Cuerpo legal", fLaw]), h("label",{for:"mQ"},["Buscar", fQ]),
+      h("div",{class:"row"},[
+        h("button",{type:"button",disabled: items.length ? null : "disabled",onclick:function(){ var txt = exportText();
+          (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function(){ copyMsg.textContent = "Copiadas. Pégalas en un correo o documento para respaldarlas."; },
+            function(){ copyMsg.innerHTML = ""; var ta = h("textarea",{rows:"6","aria-label":"Tus notas para copiar"}); ta.value = txt; copyMsg.appendChild(h("span",{text:"Selecciona y copia este texto:"})); copyMsg.appendChild(ta); ta.select(); }); }},["Copiar todas"]),
+        h("button",{class:"ghost",type:"button",onclick:function(){ NS.from = null; NS.law = ""; library(out); }},["Volver a las normas"])]),
+      copyMsg
+    ]));
+    out.appendChild(list); draw();
+  }).catch(function(){ failMsg(out); });
+}
+
 function library(out){
-  out.innerHTML = "";
+  out.innerHTML = ""; NS.from = null;
+  var nn = Object.keys(nget()).length;
+  out.appendChild(h("button",{class:"card mineBtn",type:"button",onclick:function(){ myNotes(out); window.scrollTo(0,0); }},[
+    h("b",{text:"Mis marcas y notas"}), h("span",{class:"small muted",text: nn ? nn+" artículo"+(nn===1?"":"s")+" marcado"+(nn===1?"":"s")+" o con nota" : "Marca artículos como Importante, Repasar o Duda y escribe tus comentarios"})]));
   var pos = rget().pos || {};
   out.appendChild(h("h2",{text:"Leer las normas"}));
   out.appendChild(h("p",{class:"small muted",text:"Abre cualquier cuerpo legal y léelo de corrido, ordenado por libros, títulos y párrafos. La app recuerda dónde quedaste en cada uno."}));
@@ -540,7 +646,12 @@ function readLaw(out, k, start){
     var frag = document.createDocumentFragment(); for(var i=from;i<lo;i++) frag.appendChild(artEl(L[i])); reader.insertBefore(frag, prevBtn.nextSibling); lo = from;
     window.scrollBy(0, document.documentElement.scrollHeight - y0); if(lo===0) prevBtn.remove(); }},["Ver artículos anteriores"]);
   var moreBtn = h("button",{type:"button",class:"wide",onclick:function(){ more(); }},["Seguir leyendo"]);
-  function artEl(a){ return h("section",{class:"rart","data-i":String(a.i)}, headEl(a.hd||[]).concat([artBody(a), h("button",{class:"ghost small",type:"button",onclick:function(){ CS.draft = "Explícame el artículo "+a.n+" de "+meta.c+": qué regula, requisitos, plazos o penas y cómo se relaciona con otras normas."; setTab("consultar"); }},["Preguntar a Claude"])])); }
+  function artEl(a){
+    var x = noteOf(a), sec = h("section",{class:"rart"+(x && x.m ? " mkl mk-"+x.m : ""),"data-i":String(a.i)}, headEl(a.hd||[]).concat([artBody(a)]));
+    sec.appendChild(noteTools(a, function(){ sec.replaceWith(artEl(a)); }));
+    sec.appendChild(h("button",{class:"ghost small",type:"button",onclick:function(){ CS.draft = "Explícame el artículo "+a.n+" de "+meta.c+": qué regula, requisitos, plazos o penas y cómo se relaciona con otras normas."; setTab("consultar"); }},["Preguntar a Claude"]));
+    return sec;
+  }
   function more(){ var to = Math.min(L.length, hi+CH), frag = document.createDocumentFragment(); for(var i=hi;i<to;i++) frag.appendChild(artEl(L[i])); reader.insertBefore(frag, moreBtn); hi = to;
     if(hi>=L.length){ moreBtn.replaceWith(h("p",{class:"small muted center",text:"Fin de "+meta.n+"."})); if(io) io.disconnect(); } }
   if(lo>0) reader.appendChild(prevBtn);
@@ -576,7 +687,7 @@ function doSearch(out){
     out.appendChild(h("p",{class:"small muted",text: res.length ? res.length+" resultado"+(res.length>1?"s":"")+(res.length>=80?" (se muestran los primeros 80)":"") : "Sin resultados. Prueba con otra palabra o revisa la ortografía."}));
     out.appendChild(h("div",{class:"rlist"}, res.map(function(a){
       return h("button",{class:"ritem",type:"button",onclick:function(){ NS.art = {k:a.k, i:a.i}; showArt(out, a.k, a.i); window.scrollTo(0,0); }},[
-        h("span",{class:"rcite",text:"Art. "+a.n+" · "+lawMeta(a.k).c}), hl(h("span",{class:"rsnip"}), snippet(a, m ? "" : q), m ? "" : q)]);
+        h("span",{class:"rcite",text:"Art. "+a.n+" · "+lawMeta(a.k).c}), noteTags(a), hl(h("span",{class:"rsnip"}), snippet(a, m ? "" : q), m ? "" : q)]);
     })));
   }).catch(function(){ failMsg(out); });
 }
@@ -588,7 +699,7 @@ function listArts(out, k){
   L.forEach(function(a){
     items = items.concat(headEl(a.hd||[]));
     items.push(h("button",{class:"ritem",type:"button",onclick:function(){ NS.art = {k:k, i:a.i}; showArt(out, k, a.i); window.scrollTo(0,0); }},[
-      h("span",{class:"rcite",text:"Art. "+a.n}), h("span",{class:"rsnip",text:a.t.replace(/\n/g," ").replace(/^\S+\s+\S+\s*[\.\-]*\s*/,"").slice(0,140)+(a.t.length>140?"…":"")})]));
+      h("span",{class:"rcite",text:"Art. "+a.n}), noteTags(a), h("span",{class:"rsnip",text:a.t.replace(/\n/g," ").replace(/^\S+\s+\S+\s*[\.\-]*\s*/,"").slice(0,140)+(a.t.length>140?"…":"")})]));
   });
   out.appendChild(h("div",{class:"rlist"}, items));
 }
@@ -598,11 +709,13 @@ function showArt(out, k, i){
   var a = L[i], meta = lawMeta(k); NS.art = {k:k, i:i};
   out.innerHTML = "";
   var body = h("div",{class:"lex big"}); body.appendChild(artBody(a, NS.q && !/^\s*(art|\d)/i.test(NS.q) ? NS.q : ""));
-  out.appendChild(h("div",{class:"card"},[
+  var nx = noteOf(a);
+  out.appendChild(h("div",{class:"card"+(nx && nx.m ? " mkl mk-"+nx.m : "")},[
     h("div",{class:"lexc",text:meta.n}), h("h2",{text:"Artículo "+a.n}), (function(){ var sec = []; for(var j=i;j>=0 && sec.length<3;j--){ (L[j].hd||[]).slice().reverse().forEach(function(x){ if(!sec.some(function(y){ return y[0]<=x[0]; })) sec.unshift(x); }); } return sec.length ? h("p",{class:"small muted",text:sec.map(function(x){ return x[1]; }).join(" › ")}) : null; })(), body,
+    noteTools(a, function(){ showArt(out, k, i); }),
     h("div",{class:"foot"},[
       h("button",{type:"button",disabled:i===0?"disabled":null,onclick:function(){ showArt(out,k,i-1); window.scrollTo(0,0); }},["‹ Art. anterior"]),
-      h("button",{class:"ghost",type:"button",onclick:function(){ NS.art = null; doSearch(out); }},[NS.q ? "Volver a resultados" : "Índice de la norma"]),
+      h("button",{class:"ghost",type:"button",onclick:function(){ NS.art = null; if(NS.from==="mine") myNotes(out); else doSearch(out); }},[NS.from==="mine" ? "Volver a mis marcas" : NS.q ? "Volver a resultados" : "Índice de la norma"]),
       h("button",{type:"button",disabled:i>=L.length-1?"disabled":null,onclick:function(){ showArt(out,k,i+1); window.scrollTo(0,0); }},["Art. siguiente ›"])
     ]),
     h("button",{type:"button",onclick:function(){ openRead(k, i); window.scrollTo(0,0); }},["Leer la norma desde aquí"]),
@@ -610,7 +723,7 @@ function showArt(out, k, i){
   ]));
 }
 function goArt(k, a){
-  VIEW = "normas"; NS.law = k; NS.q = ""; NS.read = null;
+  VIEW = "normas"; NS.law = k; NS.q = ""; NS.read = null; NS.from = null;
   loadLaw(k).then(function(){ var x = findArt(k, a); NS.art = x ? {k:k, i:x.i} : null; setTab("normas"); }).catch(function(){ setTab("normas"); });
 }
 
