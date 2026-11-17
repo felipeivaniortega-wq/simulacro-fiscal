@@ -1,8 +1,8 @@
 {
- "name": "Simulacro Fiscal Adjunto 2026",
- "short_name": "Simulacro FA",
+ "name": "Ensayo Fiscal Adjunto 2026",
+ "short_name": "Ensayo FA",
  "lang": "es-CL",
- "description": "Simulacro del examen escrito de conocimientos jurídicos del concurso de fiscales adjuntos 2026.",
+ "description": "Ensayo del examen escrito de conocimientos jurídicos del concurso de fiscales adjuntos 2026.",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
