@@ -192,6 +192,7 @@ function fmt(n){ return (Math.round(n*100)/100).toLocaleString("es-CL",{maximumF
 
 /* ---------- Puntaje: V/F descuenta 1 buena por cada 2 malas completas; selección múltiple, 1 por cada 4. Omitidas no descuentan.
    El descuento es siempre un número entero de buenas (no hay fracciones). */
+var PVF = 1, PSM = 2;
 function score(qs, ans, desc){
   if(desc===undefined) desc = true;
   var r = {vf:{b:0,m:0,o:0,n:0}, sm:{b:0,m:0,o:0,n:0}, mat:{}};
@@ -203,9 +204,13 @@ function score(qs, ans, desc){
     else { g.m++; mm.m++; }
   });
   r.desc = desc;
+  /* Ponderación: cada V/F vale 1 punto y cada pregunta de selección múltiple vale 2.
+     El descuento es siempre de buenas enteras: 1 buena V/F (1 punto) por cada 2 malas V/F
+     y 1 buena de selección (2 puntos) por cada 4 malas de selección. */
+  r.pVF = PVF; r.pSM = PSM;
   r.dVF = desc ? Math.floor(r.vf.m/2) : 0; r.dSM = desc ? Math.floor(r.sm.m/4) : 0;
-  r.netVF = r.vf.b - r.dVF; r.netSM = r.sm.b - r.dSM;
-  r.net = Math.max(0, r.netVF + r.netSM); r.max = qs.length;
+  r.netVF = (r.vf.b - r.dVF)*PVF; r.netSM = (r.sm.b - r.dSM)*PSM;
+  r.net = Math.max(0, r.netVF + r.netSM); r.max = r.vf.n*PVF + r.sm.n*PSM;
   r.nota = nota(r.net, r.max);
   return r;
 }
@@ -235,7 +240,7 @@ function home(){
   app.innerHTML = "";
   app.appendChild(h("div",null,[
     h("h1",{text:"Examen escrito de conocimientos jurídicos"}),
-    h("p",{class:"muted",text:"Concurso de fiscales adjuntos 2026. Formato: 80 preguntas, 40 de verdadero o falso y 40 de selección múltiple. Se pasa al examen oral con nota 5,0."})
+    h("p",{class:"muted",text:"Concurso de fiscales adjuntos 2026. Formato: 80 preguntas, 40 de verdadero o falso (1 punto cada una) y 40 de selección múltiple (2 puntos cada una), 120 puntos en total. Se pasa al examen oral con nota 5,0."})
   ]));
   var last = store.runs[store.runs.length-1];
   app.appendChild(h("div",{class:"score"},[
@@ -260,14 +265,14 @@ function home(){
     startExam(a, b, m);
   }
   app.appendChild(h("div",{class:"card"},[h("label",{class:"check",for:"desc"},[descBox, " Aplicar descuento en los ensayos"]),
-    h("p",{class:"small muted",text:"Verdadero o falso: se descuenta 1 buena por cada 2 malas. Selección múltiple: 1 buena por cada 4 malas. Siempre en números enteros; las omitidas no descuentan. Desmárcalo para practicar sin descuento."})]));
+    h("p",{class:"small muted",text:"Verdadero o falso: se descuenta 1 buena (1 punto) por cada 2 malas. Selección múltiple: 1 buena (2 puntos) por cada 4 malas. Siempre buenas enteras; las omitidas no descuentan. Desmárcalo para practicar sin descuento."})]));
   var modes = h("div",{class:"grid"},[
     h("div",{class:"card mode"},[h("h2",{text:"Ensayo completo"}), h("p",{class:"small muted",text:"80 preguntas (40 + 40) con nota y, si está activado, descuento. Prioriza las preguntas que aún no has visto; las respuestas se muestran al terminar."}),
       h("label",{for:"mins"},["Tiempo en minutos", mins]),
       h("button",{class:"primary",type:"button",onclick:function(){ startExam(40,40, parseInt(mins.value,10)||120); }},["Comenzar ensayo"])]),
     h("div",{class:"card mode"},[h("h2",{text:"Ensayo breve"}), h("p",{class:"small muted",text:"20 preguntas (10 + 10) en 30 minutos, con la misma corrección."}),
       h("button",{type:"button",onclick:function(){ startExam(10,10,30); }},["Comenzar breve"])]),
-    h("div",{class:"card mode"},[h("h2",{text:"Ensayo personalizado"}), h("p",{class:"small muted",text:"Elige cuántas preguntas de cada tipo y el tiempo. Se corrige igual que el ensayo completo: descuento (si está activado) y nota con 60% de exigencia sobre el total de preguntas."}),
+    h("div",{class:"card mode"},[h("h2",{text:"Ensayo personalizado"}), h("p",{class:"small muted",text:"Elige cuántas preguntas de cada tipo y el tiempo. Se corrige igual que el ensayo completo: V/F 1 punto, selección 2 puntos, descuento (si está activado) y nota con 60% de exigencia sobre el puntaje total."}),
       h("div",{class:"row3"},[h("label",{for:"cvf"},["Verdadero o falso", cVF]), h("label",{for:"csm"},["Selección múltiple", cSM]), h("label",{for:"cmin"},["Minutos", cMin])]),
       cMsg,
       h("button",{class:"primary",type:"button",onclick:startCustom},["Comenzar personalizado"])]),
@@ -465,10 +470,10 @@ function resultCard(){
     S.saved ? null : h("p",{class:"small muted",text:"Este ensayo quedó guardado en la pestaña Revisión para que puedas volver a revisarlo cuando quieras."}),
     h("div",{class:"score"},[
       h("div",null,[h("b",{text:fmt(r.net)+" / "+r.max}), h("span",{class:"small muted",text:"puntaje neto"})]),
-      h("div",null,[h("b",{text:fmt(r.netVF)}), h("span",{class:"small muted",text:"V/F: "+r.vf.b+" buenas, "+r.vf.m+" malas, "+r.vf.o+" omitidas"+(r.desc?" · descuento "+r.dVF:"")})]),
-      h("div",null,[h("b",{text:fmt(r.netSM)}), h("span",{class:"small muted",text:"Selección: "+r.sm.b+" buenas, "+r.sm.m+" malas, "+r.sm.o+" omitidas"+(r.desc?" · descuento "+r.dSM:"")})])
+      h("div",null,[h("b",{text:fmt(r.netVF)}), h("span",{class:"small muted",text:"puntos V/F (1 c/u): "+r.vf.b+" buenas, "+r.vf.m+" malas, "+r.vf.o+" omitidas"+(r.desc?" · descuento "+r.dVF+" buena"+(r.dVF===1?"":"s"):"")})]),
+      h("div",null,[h("b",{text:fmt(r.netSM)}), h("span",{class:"small muted",text:"puntos selección (2 c/u): "+r.sm.b+" buenas, "+r.sm.m+" malas, "+r.sm.o+" omitidas"+(r.desc?" · descuento "+r.dSM+" buena"+(r.dSM===1?"":"s")+" ("+(r.dSM*2)+" pts.)":"")})])
     ]),
-    h("p",{class:"small muted",text:(r.desc ? "Con descuento: 1 buena por cada 2 malas en verdadero o falso y 1 por cada 4 en selección múltiple, en números enteros. " : "Sin descuento: el puntaje neto es el número de buenas. ")+"Escala con 60% de exigencia sobre "+r.max+" preguntas: "+fmt(0.6*r.max)+" puntos netos equivalen a un 4,0 y "+fmt(0.6*r.max+ (r.max-0.6*r.max)/3)+" a un 5,0."}),
+    h("p",{class:"small muted",text:"Cada verdadero o falso vale 1 punto y cada selección múltiple 2. "+(r.desc ? "Con descuento: 1 buena por cada 2 malas en verdadero o falso y 1 buena por cada 4 malas en selección múltiple, en buenas enteras. " : "Sin descuento: se suman los puntos de las buenas. ")+"Escala con 60% de exigencia sobre "+r.max+" puntos: "+fmt(0.6*r.max)+" puntos netos equivalen a un 4,0 y "+fmt(0.6*r.max+ (r.max-0.6*r.max)/3)+" a un 5,0."}),
     h("div",{class:"tw"},[h("table",null,[h("thead",null,[h("tr",null,[h("th",{text:"Materia"}),h("th",{class:"n",text:"Buenas"}),h("th",{class:"n",text:"Malas"}),h("th",{class:"n",text:"Omitidas"}),h("th",{class:"n",text:"Acierto"})])]), h("tbody",null,rows)])])
   ]);
 }
