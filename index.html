@@ -125,6 +125,9 @@ ol.items li{padding-left:12px;border-left:3px solid var(--line)}
 .opt.right{border-color:var(--ok);background:var(--ok-bg)}
 .opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:end}.row3 label{font-size:.85rem}.row3 input{width:100%}label.check{display:flex;flex-direction:row;justify-content:flex-start;align-items:center;gap:10px;font-weight:600;text-align:left;margin:0}.check input{width:20px;height:20px}
+.repbox{background:var(--warn-bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.repbox .row{flex-wrap:wrap;gap:6px}
+.repmsg{margin:0;font-size:.85rem;color:var(--ok)}
 .fund{border-left:3px solid var(--accent);padding:10px 12px;background:var(--soft);border-radius:0 8px 8px 0;font-size:.95rem;display:flex;flex-direction:column;gap:10px}
 .lex{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-family:var(--display);font-weight:400;font-size:.95rem;line-height:1.55}
 .lex p{font-family:var(--display);font-weight:400}
@@ -306,6 +309,7 @@ function revisiones(){
         h("button",{class:"primary",type:"button",onclick:function(){ openReview(r); }},["Revisar"])]);
     }))]));
   }
+  app.appendChild(repsCard());
   var wrong = BANK.filter(function(q){ var x = store.hist[q.id]; return x && x.last===0; });
   app.appendChild(h("div",{class:"card"},[h("h2",{text:"Repaso de errores"}), h("p",{class:"small muted",text: wrong.length ? "Vuelve a responder las "+wrong.length+" preguntas cuya última respuesta fue incorrecta, con el fundamento apenas contestas." : "Aún no tienes errores registrados."}),
     h("button",{type:"button",disabled: wrong.length?null:"disabled",onclick:function(){ startStudy(shuffle(wrong)); VIEW = "practicar"; markTab("practicar"); }},["Repasar errores"])]));
@@ -391,6 +395,70 @@ function qCard(q, idx, total, chosen, reveal, onPick){
     (q.x||[]).forEach(function(x){ fk.push(h("div",{class:"lex"},[h("div",{class:"lexc",text:"Para profundizar · "+x.c}), h("p",{text:x.t}),
       x.k ? h("button",{class:"ghost small",type:"button",onclick:function(){ goArt(x.k, x.a); }},["Ver artículo completo en Normas"]) : null])); });
     kids.push(h("div",{class:"fund"},fk));
+    kids.push(repWidget(q, chosen));
+  }
+  return h("div",{class:"card"},kids);
+}
+/* ---------- Reportes: el usuario avisa que una pregunta podría estar mal corregida */
+var REP_REPO = "https://github.com/felipeivaniortega-wq/simulacro-fiscal/issues/new";
+var REP_WA = "";   // número de WhatsApp de destino (ej. 56912345678); vacío = el usuario elige el contacto
+var REP_MAIL = ""; // correo de destino; vacío = el usuario escribe el destinatario
+var REP_MOT = ["La respuesta correcta está mal","El fundamento es incorrecto o incompleto","La norma fue modificada o derogada","El enunciado es ambiguo o tiene errores","Otro"];
+function qcode(id){ var x = 2166136261; for(var i=0;i<id.length;i++){ x ^= id.charCodeAt(i); x = Math.imul(x, 16777619) >>> 0; } var c = x.toString(36).toUpperCase(); while(c.length<6) c = "0"+c; return "P-"+c.slice(-6); }
+function ansTxt(q, v){ return q.t==="vf" ? (v===1?"Verdadero":"Falso") : "abcde".charAt(v)+") "+q.a[v]; }
+function repText(q, chosen, mot, com){
+  var L = ["Reporte de pregunta · Ensayo Fiscal Adjunto 2026", "Código: "+qcode(q.id), "Materia: "+(MAT[q.m]||q.m)+" · "+(q.t==="vf"?"Verdadero o falso":"Selección múltiple"), "", "Enunciado: "+q.e];
+  if(q.i && q.i.length) L.push(q.i.join("\n"));
+  if(q.t==="sm") L.push("Alternativas: "+q.a.map(function(x,k){ return "abcde".charAt(k)+") "+x; }).join(" | "));
+  L.push("Respuesta de la app: "+ansTxt(q, q.r));
+  if(chosen!==undefined && chosen!==null) L.push("Mi respuesta: "+ansTxt(q, chosen));
+  L.push("", "Motivo: "+mot, "Comentario: "+(com || "(sin comentario)"), "", "Fecha: "+new Date().toLocaleString("es-CL"));
+  return L.join("\n");
+}
+function copyText(txt, onOk, onFail){
+  function legacy(){ var ta = h("textarea",{style:"position:fixed;top:-1000px"}); ta.value = txt; document.body.appendChild(ta); ta.select(); var ok = false; try{ ok = document.execCommand("copy"); }catch(e){} ta.remove(); ok ? onOk() : onFail(); }
+  try{ if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(txt).then(onOk, legacy); return; } }catch(e){}
+  legacy();
+}
+function repWidget(q, chosen){
+  var box = h("div",null,[]);
+  function closed(){ box.innerHTML = ""; box.appendChild(h("button",{class:"ghost small",type:"button",onclick:open},["⚑ Reportar un posible error en esta pregunta"])); }
+  function open(){
+    box.innerHTML = "";
+    var sel = h("select",{id:"repmot"}, REP_MOT.map(function(m){ return h("option",{value:m,text:m}); }));
+    var ta = h("textarea",{id:"repcom",rows:"4",placeholder:"Explica qué está mal y, si puedes, cuál sería la respuesta correcta y la norma que la respalda."});
+    var msg = h("p",{class:"repmsg",role:"status"});
+    function pack(){ return {mot: sel.value, com: ta.value.trim(), txt: repText(q, chosen, sel.value, ta.value.trim())}; }
+    function keep(r, via){ store.reps = (store.reps||[]).concat([{d: Date.now(), c: qcode(q.id), id: q.id, mot: r.mot, com: r.com, txt: r.txt, via: via}]).slice(-50); save(); }
+    function sent(t){ msg.textContent = t+" Una copia queda en Revisión › Mis reportes."; }
+    var gh = h("button",{class:"primary small",type:"button",onclick:function(){ var r = pack(); keep(r,"GitHub");
+      window.open(REP_REPO+"?title="+encodeURIComponent("[Reporte] "+qcode(q.id)+" · "+r.mot)+"&body="+encodeURIComponent(r.txt), "_blank", "noopener"); sent("Se abrió GitHub con el reporte listo: inicia sesión si te lo pide y pulsa «Submit new issue» (o «Create») para enviarlo."); }},["Enviar por GitHub"]);
+    var wa = h("button",{class:"small",type:"button",onclick:function(){ var r = pack(); keep(r,"WhatsApp");
+      window.open("https://wa.me/"+REP_WA+"?text="+encodeURIComponent(r.txt), "_blank", "noopener"); sent(REP_WA ? "Se abrió WhatsApp con el reporte listo: pulsa enviar." : "Se abrió WhatsApp con el reporte listo: elige el contacto y pulsa enviar."); }},["WhatsApp"]);
+    var ml = h("button",{class:"small",type:"button",onclick:function(){ var r = pack(); keep(r,"correo");
+      location.href = "mailto:"+REP_MAIL+"?subject="+encodeURIComponent("[Reporte] "+qcode(q.id)+" · "+r.mot)+"&body="+encodeURIComponent(r.txt); sent("Se abrió tu correo con el reporte listo"+(REP_MAIL ? ": pulsa enviar." : ": escribe el destinatario y pulsa enviar.")); }},["Correo"]);
+    var cp = h("button",{class:"small",type:"button",onclick:function(){ var r = pack(); copyText(r.txt, function(){ keep(r,"copia"); msg.textContent = "Texto copiado. Pégalo donde quieras enviarlo; también queda en Revisión › Mis reportes."; }, function(){ msg.textContent = "No se pudo copiar automáticamente."; }); }},["Copiar texto"]);
+    box.appendChild(h("div",{class:"repbox"},[
+      h("b",{text:"Reportar un posible error · "+qcode(q.id)}),
+      h("p",{class:"small muted",style:"margin:0",text:"El reporte incluye el código de la pregunta, el enunciado, la respuesta de la app y la tuya, para que pueda revisarse y corregirse."}),
+      h("label",{for:"repmot"},["Motivo", sel]), h("label",{for:"repcom"},["Comentario", ta]),
+      h("div",{class:"row"},[gh, wa, ml, cp, h("button",{class:"ghost small",type:"button",onclick:closed},["Cancelar"])]), msg]));
+  }
+  closed();
+  return box;
+}
+function repsCard(){
+  var reps = (store.reps||[]).slice().reverse();
+  var msg = h("p",{class:"repmsg",role:"status"});
+  var kids = [h("h2",{text:"Mis reportes"}),
+    h("p",{class:"small muted",text: reps.length ? reps.length+" reporte"+(reps.length===1?"":"s")+" enviado"+(reps.length===1?"":"s")+" desde este dispositivo. Para reportar, usa el botón «Reportar un posible error» que aparece bajo el fundamento de cada pregunta corregida." : "Aún no has reportado preguntas. Si crees que una pregunta está mal corregida, usa el botón «Reportar un posible error» que aparece bajo su fundamento."})];
+  if(reps.length){
+    kids.push(h("div",{class:"revlist"}, reps.slice(0,10).map(function(r){ var d = new Date(r.d);
+      return h("div",{class:"revrow"},[h("div",null,[h("b",{text:r.c}), h("span",{class:"small muted",text:r.mot}), h("span",{class:"small muted",text:d.toLocaleDateString("es-CL",{day:"numeric",month:"short"})+" · por "+r.via})])]); })));
+    kids.push(h("div",{class:"row"},[
+      h("button",{type:"button",onclick:function(){ copyText(reps.map(function(r){ return r.txt; }).join("\n\n——————\n\n"), function(){ msg.textContent = "Todos los reportes quedaron copiados."; }, function(){ msg.textContent = "No se pudo copiar automáticamente."; }); }},["Copiar todos"]),
+      h("button",{class:"ghost",type:"button",onclick:function(){ if(confirm("¿Borrar la lista de reportes de este dispositivo? Los ya enviados no se ven afectados.")){ store.reps = []; save(); revisiones(); } }},["Borrar lista"])]));
+    kids.push(msg);
   }
   return h("div",{class:"card"},kids);
 }
