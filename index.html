@@ -125,6 +125,15 @@ ol.items li{padding-left:12px;border-left:3px solid var(--line)}
 .opt.right{border-color:var(--ok);background:var(--ok-bg)}
 .opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:end}.row3 label{font-size:.85rem}.row3 input{width:100%}label.check{display:flex;flex-direction:row;justify-content:flex-start;align-items:center;gap:10px;font-weight:600;text-align:left;margin:0}.check input{width:20px;height:20px}
+.aviso{border-left:4px solid var(--warn)}
+.aviso ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+details.aviso-mini summary{cursor:pointer;color:var(--muted);font-size:.9rem}
+.resumecard{border:2px solid var(--accent)}
+.chart svg{width:100%;height:auto;display:block}
+.trend.up{color:var(--ok)} .trend.down{color:var(--bad)}
+.plan ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:10px}
+.plan li .row{margin-top:4px}
+.progask{background:var(--soft);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .repbox{background:var(--warn-bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .repbox .row{flex-wrap:wrap;gap:6px}
 .repmsg{margin:0;font-size:.85rem;color:var(--ok)}
@@ -245,6 +254,8 @@ function home(){
     h("h1",{text:"Examen escrito de conocimientos jurídicos"}),
     h("p",{class:"muted",text:"Concurso de fiscales adjuntos 2026. Formato: 80 preguntas, 40 de verdadero o falso (1 punto cada una) y 40 de selección múltiple (2 puntos cada una), 120 puntos en total. Se pasa al examen oral con nota 5,0."})
   ]));
+  if(!store.avisoOk) app.appendChild(avisoCard(true));
+  var rcard = resumeCard(); if(rcard) app.appendChild(rcard);
   var last = store.runs[store.runs.length-1];
   app.appendChild(h("div",{class:"score"},[
     h("div",null,[h("b",{text:String(BANK.length)}), h("span",{class:"small muted",text:nvf+" V/F · "+nsm+" selección múltiple"})]),
@@ -284,18 +295,22 @@ function home(){
       h("button",{type:"button",disabled: wrong.length?null:"disabled",onclick:function(){ startStudy(shuffle(wrong)); }},["Repasar errores"])])
   ]);
   app.appendChild(modes);
+  app.appendChild(planHomeCard());
   app.appendChild(progressCard());
   app.appendChild(h("div",{class:"card"},[h("h2",{text:"Sobre las preguntas"}),
     h("p",{class:"small",text:"Las preguntas siguen el formato de las pruebas escritas de la Fiscalía y se responden según el texto legal vigente al 25 de octubre de 2026, como exige el temario. Al corregir verás una explicación de por qué cada respuesta es correcta o incorrecta y, para profundizar, el texto del artículo."}),
     h("p",{class:"small muted",text:"Tu avance se guarda sólo en este navegador. Si compartes el enlace, cada persona lleva el suyo."}),
     resetRow()
   ]));
+  if(store.avisoOk) app.appendChild(avisoCard(false));
 }
 /* ---------- Ensayos guardados para revisión (últimos 10, en este dispositivo) */
 function revisiones(){
   stopTimer(); showBack(true);
   app.innerHTML = "";
-  app.appendChild(h("div",null,[h("h1",{text:"Revisión"}), h("p",{class:"muted",text:"Tus últimos 10 ensayos entregados, con tus respuestas. Ábrelos para ver qué contestaste, la respuesta correcta y el fundamento de cada pregunta."})]));
+  app.appendChild(h("div",null,[h("h1",{text:"Revisión y progreso"}), h("p",{class:"muted",text:"Tu línea de progresión, tu plan de estudio y tus últimos ensayos entregados para revisarlos con su fundamento."})]));
+  progressionCards().forEach(function(c){ app.appendChild(c); });
+  app.appendChild(h("h2",{text:"Ensayos guardados (últimos 10)"}));
   var revs = (store.revs||[]).slice().reverse();
   if(!revs.length){
     app.appendChild(h("div",{class:"card"},[h("h2",{text:"Aún no hay ensayos guardados"}),
@@ -318,7 +333,7 @@ function openReview(r){
   var qs = r.ids.map(function(id){ return BYID[id]; }).filter(Boolean);
   if(!qs.length) return;
   stopTimer();
-  S = {mode:"exam", qs:qs, i:0, ans:r.ans, fin:true, ask:false, desc:r.desc, saved:true, tab:"revision"};
+  S = {mode:"exam", qs:qs, i:0, ans:r.ans, fin:true, ask:false, desc:r.desc, saved:true, tab:"revision", fd:r.d};
   S.res = score(S.qs, S.ans, S.desc);
   VIEW = "revision"; markTab("revision"); renderExam(); window.scrollTo(0,0);
 }
@@ -349,6 +364,139 @@ function studyCard(){
       startStudy(shuffle(pool));
     }},["Comenzar estudio"])]);
 }
+/* ---------- Aviso de prototipo y privacidad */
+function avisoBody(){
+  return h("ul",{class:"small"},[
+    h("li",{text:"Esta app es un prototipo en desarrollo para preparar el examen escrito del concurso de fiscales adjuntos 2026. No es material oficial. Se ruega discreción: no la difundas ni compartas su contenido fuera del grupo con el que se compartió."}),
+    h("li",{text:"Puede contener errores. Si una pregunta te parece mal corregida, usa «Reportar un posible error» bajo su fundamento: los reportes se revisan después y las correcciones se incorporan en versiones siguientes."}),
+    h("li",{text:"Tus respuestas, ensayos, progreso y notas se guardan sólo en este dispositivo, en el almacenamiento del navegador. No se envían a ningún servidor ni se almacenan en otra parte, y quien administra la app no tiene acceso a tus resultados. Si borras los datos del navegador o cambias de dispositivo, se pierden."}),
+    h("li",{text:"Lo único que sale del dispositivo es lo que tú decidas enviar: los reportes de fallos y, en la versión dentro de Claude, las consultas de la pestaña Consultar."})]);
+}
+function avisoCard(first){
+  if(first) return h("div",{class:"card aviso"},[h("h2",{text:"Antes de empezar"}), avisoBody(),
+    h("button",{class:"primary",type:"button",onclick:function(){ store.avisoOk = 1; save(); home(); }},["Entendido"])]);
+  return h("details",{class:"card aviso-mini"},[h("summary",{text:"Aviso: prototipo, reportes y privacidad"}), avisoBody()]);
+}
+/* ---------- Línea de progresión y plan de estudio personalizado */
+var EXAM_DATE = new Date(2026, 11, 5);
+function progEntries(){ return (store.prog||[]).slice().sort(function(a,b){ return a.d-b.d; }); }
+function inProg(d){ return (store.prog||[]).some(function(p){ return p.d===d; }); }
+function addProg(){
+  if(!S || !S.res || inProg(S.fd)) return;
+  var r = S.res, mat = {}; Object.keys(r.mat).forEach(function(k){ var m = r.mat[k]; mat[k] = {b:m.b, m:m.m, o:m.o, n:m.n}; });
+  store.prog = (store.prog||[]).concat([{d:S.fd, nota:r.nota, net:r.net, max:r.max, n:S.qs.length, desc:r.desc, mat:mat}]); save();
+}
+function delProg(d){ store.prog = (store.prog||[]).filter(function(p){ return p.d!==d; }); save(); }
+function progAsk(){
+  if(!S || !S.fd) return null;
+  var box = h("div",{class:"progask"},[]);
+  function draw(){
+    box.innerHTML = "";
+    if(inProg(S.fd)){
+      box.appendChild(h("p",{class:"small",style:"margin:0"},[h("b",{text:"✓ Incluido en tu línea de progresión."}), " Tu plan de estudio ya considera este resultado (pestaña Revisión)."]));
+      box.appendChild(h("div",{class:"row"},[h("button",{class:"ghost small",type:"button",onclick:function(){ delProg(S.fd); draw(); }},["Quitar de la progresión"])]));
+    } else if(S.progNo){
+      box.appendChild(h("p",{class:"small muted",style:"margin:0",text:"Este resultado no se usará en tu línea de progresión."}));
+      box.appendChild(h("div",{class:"row"},[h("button",{class:"ghost small",type:"button",onclick:function(){ S.progNo = false; addProg(); draw(); }},["Sumarlo igualmente"])]));
+    } else {
+      box.appendChild(h("b",{text:"¿Quieres que este resultado se use para alimentar tu línea de progresión, y así ir evaluando tu avance?"}));
+      box.appendChild(h("p",{class:"small muted",style:"margin:0",text:"Súmalo si hiciste el ensayo en condiciones reales (sin consultar). Con esos resultados se calcula tu evolución por materia y tu plan de estudio."}));
+      box.appendChild(h("div",{class:"row"},[h("button",{class:"primary",type:"button",onclick:function(){ addProg(); draw(); }},["Sí, sumarlo"]),
+        h("button",{type:"button",onclick:function(){ S.progNo = true; draw(); }},["No, fue sólo práctica"])]));
+    }
+  }
+  draw(); return box;
+}
+function matStats(){
+  var E = progEntries(), rec = E.slice(-3), prev = E.slice(0, -3), out = {};
+  function acc(list, k){ var b=0, n=0; list.forEach(function(p){ var m = p.mat[k]; if(m){ b += m.b; n += m.n; } }); return {b:b, n:n, a: n ? b/n : null}; }
+  Object.keys(MAT).forEach(function(k){ out[k] = {all: acc(E,k), rec: acc(rec,k), prev: acc(prev,k)}; });
+  return out;
+}
+function planItems(){
+  var st = matStats(), items = Object.keys(MAT).map(function(k){ var x = st[k]; return {k:k, a: x.rec.a, n: x.rec.n, x:x}; });
+  var withData = items.filter(function(it){ return it.n>=3; }).sort(function(a,b){ return a.a-b.a; });
+  return {st:st, top: withData.filter(function(it){ return it.a < 0.8; }).slice(0,3), withData:withData, noData: items.filter(function(it){ return it.n<3; })};
+}
+function studyPool(k, n){
+  var qs = BANK.filter(function(q){ return q.m===k; });
+  function rank(q){ var x = store.hist[q.id]; return !x ? 1 : (x.last===0 ? 0 : 2); }
+  qs = shuffle(qs).sort(function(a,b){ return rank(a)-rank(b); });
+  return qs.slice(0, n);
+}
+function nRec(a){ return Math.max(10, Math.min(30, Math.round((0.85-a)*60/5)*5)); }
+function startPlanSession(top){
+  var tot = 0; top.forEach(function(it){ tot += (0.85-it.a); });
+  var qs = []; top.forEach(function(it){ qs = qs.concat(studyPool(it.k, Math.max(5, Math.round(30*(0.85-it.a)/tot)))); });
+  VIEW = "practicar"; markTab("practicar"); startStudy(shuffle(qs).slice(0,30)); window.scrollTo(0,0);
+}
+function daysLeft(){ var t = new Date(); t.setHours(0,0,0,0); return Math.round((EXAM_DATE - t)/86400000); }
+function chartSVG(E){
+  var W = 320, H = 150, L = 26, R = 8, T = 10, B = 22, n = E.length;
+  function X(i){ return n===1 ? (L+W-R)/2 : L + i*(W-L-R)/(n-1); } function Y(v){ return T + (7-v)*(H-T-B)/6; }
+  var s = '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Evolución de tus notas">';
+  [1,4,5,7].forEach(function(v){ s += '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" style="stroke:var(--line);stroke-width:1'+(v===4||v===5?';stroke-dasharray:4 3':'')+'"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" style="font-size:10px;fill:var(--muted)">'+v+(v===5?',0':'')+'</text>'; });
+  if(n>1) s += '<polyline fill="none" style="stroke:var(--accent);stroke-width:2.5" points="'+E.map(function(p,i){ return X(i)+','+Y(p.nota); }).join(' ')+'"/>';
+  E.forEach(function(p,i){ s += '<circle cx="'+X(i)+'" cy="'+Y(p.nota)+'" r="4" style="fill:'+(p.nota>=5?'var(--ok)':'var(--bad)')+'"/>'; });
+  var step = Math.max(1, Math.ceil(n/6));
+  E.forEach(function(p,i){ if(i%step===0 || i===n-1){ var d = new Date(p.d); s += '<text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" style="font-size:10px;fill:var(--muted)">'+d.getDate()+'/'+(d.getMonth()+1)+'</text>'; } });
+  return s + '</svg>';
+}
+function progressionCards(){
+  var E = progEntries(), out = [], dl = daysLeft();
+  var head = h("div",{class:"card"},[h("h2",{text:"Mi línea de progresión"})]);
+  if(!E.length){
+    head.appendChild(h("p",{class:"small muted",text:"Aún no hay ensayos sumados. Al terminar un ensayo, la app te preguntará si quieres usar ese resultado para tu progresión. Con los ensayos que sumes verás tu evolución de notas, tu acierto por materia y un plan de estudio según tus puntos débiles."}));
+    return [head];
+  }
+  var last = E[E.length-1], r3 = E.slice(-3), p3 = E.slice(-6,-3);
+  function avg(a){ return a.reduce(function(s,p){ return s+p.nota; },0)/a.length; }
+  var ch = h("div",{class:"chart"}); ch.innerHTML = chartSVG(E); head.appendChild(ch);
+  head.appendChild(h("div",{class:"score"},[
+    h("div",null,[h("b",{class:last.nota>=5?"pass":"fail",text:last.nota.toFixed(1).replace(".",",")}), h("span",{class:"small muted",text:"último ensayo sumado"})]),
+    h("div",null,[h("b",{text:avg(r3).toFixed(1).replace(".",",")}), h("span",{class:"small muted",text:"promedio de los últimos "+r3.length+(p3.length ? " · antes "+avg(p3).toFixed(1).replace(".",",") : "")})]),
+    h("div",null,[h("b",{text:String(E.length)}), h("span",{class:"small muted",text:"ensayos sumados"+(dl>=0 ? " · faltan "+dl+" días para el escrito" : "")})])]));
+  var P = planItems(), st = P.st;
+  var rows = Object.keys(MAT).map(function(k){ var x = st[k], ra = x.rec.a, pa = x.prev.a, tr = null;
+    if(ra!==null && pa!==null && x.prev.n>=3 && x.rec.n>=3){ var d = Math.round(100*(ra-pa)); tr = h("span",{class:"trend "+(d>0?"up":d<0?"down":""),text:(d>0?"▲ +":d<0?"▼ ":"= ")+(d!==0?d+" pts.":"")}); }
+    return h("tr",null,[h("td",{text:MAT[k]}), h("td",{class:"n",text: ra===null ? "—" : Math.round(100*ra)+"%"}), h("td",{class:"n"},[tr || h("span",{class:"muted",text:"—"})]), h("td",{class:"n",text: x.all.n ? Math.round(100*x.all.a)+"% ("+x.all.n+")" : "—"})]); });
+  head.appendChild(h("div",{class:"tw"},[h("table",null,[h("thead",null,[h("tr",null,[h("th",{text:"Materia"}),h("th",{class:"n",text:"Recientes"}),h("th",{class:"n",text:"Tendencia"}),h("th",{class:"n",text:"Total"})])]), h("tbody",null,rows)])]));
+  head.appendChild(h("p",{class:"small muted",text:"«Recientes» es tu acierto en los últimos 3 ensayos sumados y «Total», el de todos (entre paréntesis, cuántas preguntas); «Tendencia» lo compara con los ensayos anteriores a esos (requiere al menos 3 preguntas en cada tramo). Las omitidas cuentan como no acertadas."}));
+  out.push(head);
+  // plan
+  var plan = h("div",{class:"card plan"},[h("h2",{text:"Plan de estudio personalizado"})]);
+  if(!P.top.length){
+    plan.appendChild(h("p",{class:"small",text: P.withData.length ? "En tus últimos ensayos superas el 80% de acierto en todas las materias con datos suficientes. Mantén el ritmo con ensayos completos y repasa tus errores." : "Todavía no hay datos suficientes por materia (se necesitan al menos 3 preguntas por materia en los últimos ensayos). Suma algunos ensayos más."}));
+  } else {
+    plan.appendChild(h("p",{class:"small muted",text:"Según tus últimos ensayos, éstas son las materias donde más puntos puedes ganar, de la más débil a la menos débil:"}));
+    plan.appendChild(h("ol",null, P.top.map(function(it){ var n = nRec(it.a);
+      return h("li",null,[h("b",{text:MAT[it.k]}), h("span",{class:"small muted",text:" · acierto reciente "+Math.round(100*it.a)+"%"}),
+        h("div",{class:"small",text:"Sugerido: "+n+" preguntas de estudio con fundamento, partiendo por las que fallaste y las que no has visto."}),
+        h("div",{class:"row"},[h("button",{type:"button",onclick:function(){ VIEW = "practicar"; markTab("practicar"); startStudy(studyPool(it.k, n)); window.scrollTo(0,0); }},["Estudiar esta materia"])])]); })));
+    plan.appendChild(h("div",{class:"row"},[h("button",{class:"primary",type:"button",onclick:function(){ startPlanSession(P.top); }},["Sesión del plan (30 preguntas)"])]));
+  }
+  var tips = [];
+  if(dl>0){ var ens = Math.max(1, Math.floor(dl/4)); tips.push("Faltan "+dl+" días para el escrito: conviene hacer unos "+ens+" ensayo"+(ens===1?"":"s")+" completo"+(ens===1?"":"s")+" más (uno cada 3 o 4 días) y sumarlos a tu progresión; entre ensayos, haz la sesión del plan."); }
+  if(P.noData.length) tips.push("Sin datos suficientes todavía: "+P.noData.map(function(it){ return MAT[it.k]; }).join("; ")+".");
+  tips.forEach(function(t){ plan.appendChild(h("p",{class:"small muted",text:t})); });
+  out.push(plan);
+  // ensayos incluidos
+  out.push(h("details",{class:"card"},[h("summary",{text:"Ensayos sumados a la progresión ("+E.length+")"}),
+    h("div",{class:"revlist"}, E.slice().reverse().map(function(p){ var d = new Date(p.d);
+      return h("div",{class:"revrow"},[h("div",null,[h("b",{class:p.nota>=5?"pass":"fail",text:"Nota "+p.nota.toFixed(1).replace(".",",")}), h("span",{class:"small muted",text:d.toLocaleDateString("es-CL",{day:"numeric",month:"short"})+" · "+p.n+" preguntas"+(p.desc?"":" · sin descuento")})]),
+        h("button",{class:"ghost small",type:"button",onclick:function(){ delProg(p.d); revisiones(); }},["Quitar"])]); }))]));
+  return out;
+}
+function planHomeCard(){
+  var E = progEntries(), P = E.length ? planItems() : null;
+  var kids = [h("h2",{text:"Plan de estudio personalizado"})];
+  if(!E.length) kids.push(h("p",{class:"small muted",text:"Suma tus ensayos a la línea de progresión (la app lo pregunta al terminar cada uno) y aquí verás qué materias reforzar, con sesiones de estudio a tu medida."}));
+  else if(P.top.length) kids.push(h("p",{class:"small",text:"Prioridad actual: "+P.top.map(function(it){ return MAT[it.k]+" ("+Math.round(100*it.a)+"%)"; }).join(", ")+"."}),
+    h("button",{class:"primary",type:"button",onclick:function(){ startPlanSession(P.top); }},["Sesión del plan (30 preguntas)"]));
+  else kids.push(h("p",{class:"small muted",text:"Aún sin materias débiles con datos suficientes. Sigue sumando ensayos."}));
+  kids.push(h("button",{class:"ghost",type:"button",onclick:function(){ setTab("revision"); }},["Ver mi línea de progresión"]));
+  return h("div",{class:"card mode"},kids);
+}
 function progressCard(){
   var rows = Object.keys(MAT).map(function(k){
     var qs = BANK.filter(function(q){return q.m===k;}), ok=0, seen=0;
@@ -364,7 +512,7 @@ function resetRow(){
   var btn = h("button",{class:"ghost",type:"button",onclick:function(){
     box.innerHTML = "";
     box.appendChild(h("div",{class:"confirm"},[h("span",{text:"Se borrarán tu historial de respuestas y tus ensayos en este navegador."}),
-      h("button",{type:"button",onclick:function(){ store = {hist:{},runs:[]}; save(); home(); }},["Borrar mi avance"]),
+      h("button",{type:"button",onclick:function(){ store = {hist:{},runs:[],avisoOk:store.avisoOk}; save(); home(); }},["Borrar mi avance"]),
       h("button",{class:"ghost",type:"button",onclick:function(){ box.innerHTML=""; }},["Cancelar"])]));
   }},["Borrar mi avance"]);
   return h("div",null,[btn, box]);
@@ -402,7 +550,7 @@ function qCard(q, idx, total, chosen, reveal, onPick){
 /* ---------- Reportes: el usuario avisa que una pregunta podría estar mal corregida */
 var REP_REPO = "https://github.com/felipeivaniortega-wq/simulacro-fiscal/issues/new";
 var REP_WA = "";   // número de WhatsApp de destino (ej. 56912345678); vacío = el usuario elige el contacto
-var REP_MAIL = ""; // correo de destino; vacío = el usuario escribe el destinatario
+var REP_MAIL = "informedefallos2026@gmail.com"; // correo de destino de los reportes
 var REP_MOT = ["La respuesta correcta está mal","El fundamento es incorrecto o incompleto","La norma fue modificada o derogada","El enunciado es ambiguo o tiene errores","Otro"];
 function qcode(id){ var x = 2166136261; for(var i=0;i<id.length;i++){ x ^= id.charCodeAt(i); x = Math.imul(x, 16777619) >>> 0; } var c = x.toString(36).toUpperCase(); while(c.length<6) c = "0"+c; return "P-"+c.slice(-6); }
 function ansTxt(q, v){ return q.t==="vf" ? (v===1?"Verdadero":"Falso") : "abcde".charAt(v)+") "+q.a[v]; }
@@ -480,17 +628,50 @@ function renderStudy(){
 }
 
 /* ---------- Ensayo */
+/* ---------- Ensayo en curso: se guarda en cada respuesta para poder retomarlo si se cierra la app */
+function keepCur(){
+  if(S && S.mode==="exam" && !S.fin){
+    store.cur = {ids: S.qs.map(function(q){ return q.id; }), ans: S.ans, i: S.i, left: Math.max(0, S.end-Date.now()), mins: S.mins, desc: S.desc, d: Date.now()};
+    save();
+  }
+}
+function curInfo(){
+  var c = store.cur; if(!c || !c.ids) return null;
+  var qs = c.ids.map(function(id){ return BYID[id]; }).filter(Boolean); if(!qs.length) return null;
+  var answered = qs.filter(function(q){ var v = c.ans && c.ans[q.id]; return v!==undefined && v!==null; }).length;
+  return {c:c, qs:qs, answered:answered};
+}
+function resumeCur(){
+  var k = curInfo(); if(!k){ delete store.cur; save(); home(); return; }
+  S = {mode:"exam", qs:k.qs, i:Math.min(k.c.i||0, k.qs.length-1), ans:k.c.ans||{}, end: Date.now()+(k.c.left||0), mins:k.c.mins, fin:false, ask:false, desc:k.c.desc!==false};
+  VIEW = "practicar"; markTab("practicar");
+  timerEl.hidden = false; tick = setInterval(drawTimer, 1000); drawTimer(); if(S && !S.fin) renderExam(); window.scrollTo(0,0);
+}
+function resumeCard(){
+  var k = curInfo(); if(!k) return null;
+  var left = Math.round((k.c.left||0)/1000), m = Math.floor(left/60), sg = left%60;
+  var box = h("div",null,[]);
+  return h("div",{class:"card resumecard"},[h("h2",{text:"¿Quieres seguir desde donde estabas?"}),
+    h("p",{class:"small",text:"Tienes un ensayo sin terminar: "+k.answered+" de "+k.qs.length+" preguntas respondidas"+(left>0 ? ", quedan "+m+":"+(sg<10?"0":"")+sg+" minutos." : ". El tiempo se agotó: al continuar se entrega con las respuestas que alcanzaste a marcar.")}),
+    h("p",{class:"small muted",text:"El ensayo se guarda en cada respuesta. El tiempo corre mientras la app está abierta y se detiene si se cierra."}),
+    h("div",{class:"row"},[h("button",{class:"primary",type:"button",onclick:resumeCur},[left>0 ? "Continuar el ensayo" : "Ver el resultado"]),
+      h("button",{class:"ghost",type:"button",onclick:function(){ box.innerHTML = ""; box.appendChild(h("div",{class:"confirm"},[h("span",{text:"Se descartará el ensayo sin terminar."}),
+        h("button",{type:"button",onclick:function(){ delete store.cur; save(); home(); }},["Descartar"]), h("button",{class:"ghost",type:"button",onclick:function(){ box.innerHTML=""; }},["Cancelar"])])); }},["Descartar"])]), box]);
+}
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="hidden") keepCur(); });
+window.addEventListener("pagehide", keepCur);
 function startExam(nvf, nsm, mins){
   var usedG = {}, sm = pick(BANK.filter(function(q){return q.t==="sm";}), nsm, usedG), vf = pick(BANK.filter(function(q){return q.t==="vf";}), nvf, usedG);
   S = {mode:"exam", qs: vf.concat(sm), i:0, ans:{}, end: Date.now()+mins*60000, mins:mins, fin:false, ask:false, desc: store.desc!==false};
   timerEl.hidden = false; tick = setInterval(drawTimer, 1000); drawTimer(); renderExam();
 }
+var keepTick = 0;
 function stopTimer(){ if(tick){ clearInterval(tick); tick = null; } timerEl.hidden = true; timerEl.className = "timer"; }
 function drawTimer(){
   if(!S || S.mode!=="exam" || S.fin) return;
   var left = Math.max(0, Math.round((S.end-Date.now())/1000)), m = Math.floor(left/60), s = left%60;
   timerEl.textContent = (m<10?"0":"")+m+":"+(s<10?"0":"")+s; timerEl.className = "timer"+(left<300?" low":"");
-  if(left<=0) finishExam();
+  if(left<=0) finishExam(); else if(++keepTick % 15 === 0) keepCur();
 }
 function navGrid(){
   return h("div",{class:"nav"}, S.qs.map(function(q,i){
@@ -502,6 +683,7 @@ function navGrid(){
 }
 function renderExam(){
   showBack(false);
+  if(!S.fin) keepCur();
   var q = S.qs[S.i], a = S.ans[q.id];
   app.innerHTML = "";
   if(S.fin) app.appendChild(resultCard());
@@ -522,12 +704,12 @@ function renderExam(){
 }
 function finishExam(){
   if(!S || S.fin) return;
-  S.fin = true; S.ask = false; stopTimer();
+  S.fin = true; S.ask = false; stopTimer(); delete store.cur; S.fd = Date.now();
   S.qs.forEach(function(q){ record(q, S.ans[q.id]); });
   S.res = score(S.qs, S.ans, S.desc);
   store.runs.push({d: Date.now(), n: S.qs.length, net: S.res.net, nota: S.res.nota, desc: S.desc}); if(store.runs.length>40) store.runs.shift();
   var _ans = {}; S.qs.forEach(function(q){ var v = S.ans[q.id]; if(v!==undefined && v!==null) _ans[q.id] = v; });
-  store.revs = (store.revs||[]).concat([{d: Date.now(), ids: S.qs.map(function(q){ return q.id; }), ans: _ans, desc: S.desc, nota: S.res.nota}]).slice(-10);
+  store.revs = (store.revs||[]).concat([{d: S.fd, ids: S.qs.map(function(q){ return q.id; }), ans: _ans, desc: S.desc, nota: S.res.nota}]).slice(-10);
   save(); S.i = 0; renderExam(); window.scrollTo(0,0);
 }
 function resultCard(){
@@ -536,6 +718,7 @@ function resultCard(){
   return h("div",{class:"card"},[
     h("h1",{class: pass?"pass":"fail", text:"Nota "+r.nota.toFixed(1).replace(".",",")+(pass?" · pasarías al examen oral":" · bajo el 5,0 exigido")}),
     S.saved ? null : h("p",{class:"small muted",text:"Este ensayo quedó guardado en la pestaña Revisión para que puedas volver a revisarlo cuando quieras."}),
+    progAsk(),
     h("div",{class:"score"},[
       h("div",null,[h("b",{text:fmt(r.net)+" / "+r.max}), h("span",{class:"small muted",text:"puntaje neto"})]),
       h("div",null,[h("b",{text:fmt(r.netVF)}), h("span",{class:"small muted",text:"puntos V/F (1 c/u): "+r.vf.b+" buenas, "+r.vf.m+" malas, "+r.vf.o+" omitidas"+(r.desc?" · descuento "+r.dVF+" buena"+(r.dVF===1?"":"s"):"")})]),
