@@ -1149,7 +1149,7 @@ function openRes(k, i){ NS.res = {k:k||null, i:(i==null?null:i)}; NS.art = null;
 function resView(out){
   out.innerHTML = "";
   var r = NS.res, idx = r.k==="ALL" ? RS.map(function(_,i){ return i; }) : r.k ? resOf(r.k) : null;
-  var dl = h("a",{class:"btnlink",href:RESUMEN.pptx,download:RESUMEN.pptx},["Descargar el PPT"]);
+  var dl = h("a",{class:"btnlink",href:RESUMEN.pptx,target:"_blank",rel:"noopener"},["Descargar el PPT"]);
   if(!idx){
     out.appendChild(h("div",{class:"card"},[h("div",{class:"lexc",text:"Normas"}), h("h2",{text:"Resumen de leyes especiales"}),
       h("p",{class:"small muted",text:RS.length+" láminas con lo esencial de cada ley especial del temario: tipos y penas, reglas de pena, investigación, plazos y procedimiento. Toca cualquier artículo subrayado para abrirlo en Normas y vuelve con un toque."}),
