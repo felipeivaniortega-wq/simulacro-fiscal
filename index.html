@@ -378,16 +378,35 @@ function resume(){
   if(S.mode==="exam") renderExam(); else renderStudy();
   window.scrollTo(0,0);
 }
+/* Leyes especiales a las que se refiere cada pregunta: normas citadas en el fundamento o ley nombrada en el enunciado */
+var LEYNUM = {L20000:"20\\.000",ARM:"17\\.798",L18216:"18\\.216",L20084:"20\\.084",L20066:"20\\.066",TRA:"18\\.290",L21732:"21\\.732",L20393:"20\\.393",L19913:"19\\.913",L21459:"21\\.459",EIV:"21\\.057",ADN:"19\\.970",L21849:"21\\.849",L17336:"17\\.336",DL2460:"2\\.460",L20214:"20\\.214",L20477:"20\\.477",LOC:"19\\.640"};
+var QLEY = null;
+function qLeyes(){
+  if(QLEY) return QLEY; QLEY = {};
+  var re = {}; Object.keys(LEYNUM).forEach(function(k){ re[k] = new RegExp("(?:[Ll]ey|D\\.?L\\.?)\\s*(?:N[°º]\\s*)?"+LEYNUM[k]+"\\b"+(k==="TRA"?"|Ley de Tránsito":"")); });
+  BANK.forEach(function(q){
+    var txt = q.e+" "+(q.i||[]).join(" ")+" "+(q.a||[]).join(" "), ks = (q.x||[]).map(function(x){ return x.k; });
+    Object.keys(LEYNUM).forEach(function(k){ if(ks.indexOf(k)>=0 || re[k].test(txt)) (QLEY[k] = QLEY[k]||[]).push(q); });
+  });
+  return QLEY;
+}
 function studyCard(){
   var selM = h("select",{id:"fMat"},[h("option",{value:"",text:"Todas las materias"})].concat(Object.keys(MAT).map(function(k){ return h("option",{value:k,text:MAT[k]}); })));
+  var QL = qLeyes(), leyes = Object.keys(LEYNUM).filter(function(k){ return QL[k] && QL[k].length; }).sort(function(a,b){ return lawMeta(a).n.localeCompare(lawMeta(b).n, "es", {numeric:true}); });
+  var selL = h("select",{id:"fLey"},[h("option",{value:"",text:"Todas las leyes especiales"})].concat(leyes.map(function(k){ return h("option",{value:k,text:lawMeta(k).n+" ("+QL[k].length+")"}); })));
+  var leyLab = h("label",{for:"fLey"},["Ley especial", selL]), leyNota = h("p",{class:"small muted",style:"margin:0",text:"Al elegir una ley se incluyen todas sus preguntas, aunque estén clasificadas en una materia procesal (por ejemplo, entrevistas videograbadas en juicio oral)."});
   var selT = h("select",{id:"fTipo"},[h("option",{value:"",text:"Ambos tipos"}),h("option",{value:"vf",text:"Verdadero o falso"}),h("option",{value:"sm",text:"Selección múltiple"})]);
   var msg = h("p",{class:"small muted"});
-  return h("div",{class:"card mode"},[h("h2",{text:"Estudio por materia"}), h("p",{class:"small muted",text:"Respuesta y fundamento legal apenas contestas. Sin tiempo ni nota."}),
-    h("label",{for:"fMat"},["Materia", selM]), h("label",{for:"fTipo"},["Tipo", selT]), msg,
+  function sync(){ var on = selM.value==="LE"; if(!on) selL.value = ""; leyLab.style.display = on ? "" : "none"; leyNota.style.display = on && selL.value ? "" : "none"; }
+  selM.addEventListener("change", sync); selL.addEventListener("change", sync); sync();
+  return h("div",{class:"card mode"},[h("h2",{text:"Estudio por materia"}), h("p",{class:"small muted",text:"Respuesta y fundamento legal apenas contestas. Sin tiempo ni nota. En \"Penal · Leyes especiales\" puedes elegir una ley específica."}),
+    h("label",{for:"fMat"},["Materia", selM]), leyLab, leyNota, h("label",{for:"fTipo"},["Tipo", selT]), msg,
     h("button",{type:"button",onclick:function(){
-      var pool = BANK.filter(function(q){ return (!selM.value||q.m===selM.value) && (!selT.value||q.t===selT.value); });
+      var base = selM.value==="LE" && selL.value ? QL[selL.value] : BANK.filter(function(q){ return !selM.value || q.m===selM.value; });
+      var pool = base.filter(function(q){ return !selT.value || q.t===selT.value; });
       if(!pool.length){ msg.textContent = "No hay preguntas con ese filtro. Prueba otra combinación."; return; }
-      startStudy(shuffle(pool));
+      msg.textContent = "";
+      startStudy(shuffle(pool.slice()));
     }},["Comenzar estudio"])]);
 }
 /* ---------- Aviso de prototipo y privacidad */
